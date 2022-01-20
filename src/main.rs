@@ -38,14 +38,13 @@ fn do_config(
 	new_address_index: Option<u32>,
 	config_path: Option<&str>,
 ) -> Result<Wallet713Config> {
-	let mut config;
 	let mut any_matches = false;
-	let exists = Wallet713Config::exists(config_path, &chain)?;
-	if exists {
-		config = Wallet713Config::from_file(config_path, &chain)?;
+	let exists = Wallet713Config::exists(config_path, chain)?;
+	let mut config = if exists {
+		Wallet713Config::from_file(config_path, chain)?
 	} else {
-		config = Wallet713Config::default(&chain)?;
-	}
+		Wallet713Config::default(chain)?
+	};
 
 	if let Some(data_path) = args.value_of("data-path") {
 		config.wallet713_data_path = data_path.to_string();
@@ -78,7 +77,9 @@ fn do_config(
 		any_matches = true;
 	}
 
-	config.to_file(config_path.map(|p| p.to_owned()))?;
+	if !exists {
+		config.to_file(config_path.map(|p| p.to_owned()))?;
+	}
 
 	if !any_matches && !silent {
 		cli_message!("{}", config);
