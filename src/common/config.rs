@@ -32,6 +32,8 @@ const DEFAULT_CONFIG: &str = r#"
 	wallet713_data_path = "wallet713_data"
 	epicbox_domain = "epicbox.io"
 	default_keybase_ttl = "24h"
+	owner_api = true
+	foreign_api = true
 "#;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
