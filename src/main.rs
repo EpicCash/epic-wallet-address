@@ -23,11 +23,12 @@ mod wallet;
 
 use clap::{crate_version, App, Arg, ArgMatches};
 use colored::*;
-use common::config::Wallet713Config;
+use common::config::{load_log_file, Wallet713Config};
 use common::{ErrorKind, Result, RuntimeMode};
 use contacts::{AddressBook, Backend};
 use controller::cli::CLI;
 use epic_core::global::{set_mining_mode, ChainTypes};
+use epic_util::logger::LogEntry;
 use wallet::create_container;
 
 fn do_config(
@@ -126,6 +127,28 @@ fn main() {
 			e
 		);
 	});
+
+	match runtime_mode {
+		RuntimeMode::Cli => {
+			let log_config = load_log_file(matches.value_of("log-config-path"), &config)
+				.unwrap_or_else(|e| {
+					panic!(
+						"{}: could not load logging config! {}",
+						"ERROR".bright_red(),
+						e
+					);
+				});
+			let (logs_tx, _) = match log_config.tui_running {
+				Some(true) => {
+					let (logs_tx, logs_rx) = std::sync::mpsc::sync_channel::<LogEntry>(200);
+					(Some(logs_tx), Some(logs_rx))
+				}
+				_ => (None, None),
+			};
+			epic_util::init_logger(Some(log_config), logs_tx)
+		}
+		RuntimeMode::Daemon => env_logger::init(),
+	}
 
 	if runtime_mode == RuntimeMode::Daemon {
 		env_logger::init();
