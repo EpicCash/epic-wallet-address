@@ -15,8 +15,8 @@
 use super::ErrorKind;
 use crate::common::config::WalletConfig;
 use failure::{Error, ResultExt};
-use grin_keychain::{mnemonic, Keychain};
-use grin_util::{from_hex, to_hex, ZeroingString};
+use epic_keychain::{mnemonic, Keychain};
+use epic_util::{from_hex, to_hex, ZeroingString};
 use log::{debug, error, warn};
 use rand::{thread_rng, Rng};
 use ring::{aead, digest, pbkdf2};
@@ -131,8 +131,8 @@ impl WalletSeed {
 			Ok(wallet_seed)
 		} else {
 			error!(
-				"wallet seed file {} could not be opened (grin wallet init). \
-				 Run \"grin wallet init\" to initialize a new wallet.",
+				"wallet seed file {} could not be opened (epic wallet init). \
+				 Run \"epic wallet init\" to initialize a new wallet.",
 				seed_file_path
 			);
 			Err(ErrorKind::WalletSeedDoesntExist)?

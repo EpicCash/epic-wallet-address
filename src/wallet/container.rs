@@ -20,7 +20,7 @@ use crate::contacts::AddressBook;
 use crate::wallet::backend::Backend;
 use crate::wallet::types::{HTTPNodeClient, NodeClient, WalletBackend};
 use failure::Error;
-use grin_keychain::ExtKeychain;
+use epic_keychain::ExtKeychain;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -86,7 +86,7 @@ pub fn create_container(
 	let wallet_config = config.as_wallet_config()?;
 	let client = HTTPNodeClient::new(
 		&wallet_config.check_node_api_http_addr,
-		config.grin_node_secret().clone(),
+		config.epic_node_secret().clone(),
 	);
 	let backend = Backend::new(&wallet_config, client)?;
 	Ok(Container::new(config, backend, address_book))

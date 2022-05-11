@@ -14,7 +14,6 @@
 
 mod acct_path_mapping;
 mod args;
-mod block_fees;
 mod block_identifier;
 mod cb_data;
 mod context;
@@ -34,7 +33,6 @@ mod wallet_inst;
 
 pub use self::acct_path_mapping::AcctPathMapping;
 pub use self::args::*;
-pub use self::block_fees::BlockFees;
 pub use self::block_identifier::BlockIdentifier;
 pub use self::cb_data::CbData;
 pub use self::context::Context;
@@ -43,7 +41,7 @@ pub use self::output_commit_mapping::OutputCommitMapping;
 pub use self::output_data::OutputData;
 pub use self::output_status::OutputStatus;
 pub use self::slate::{
-	Slate, SlateVersion, VersionedSlate, CURRENT_SLATE_VERSION, GRIN_BLOCK_HEADER_VERSION,
+	Slate, SlateVersion, VersionedSlate, CURRENT_SLATE_VERSION, EPIC_BLOCK_HEADER_VERSION,
 };
 pub use self::tx_log_entry::TxLogEntry;
 pub use self::tx_log_entry_type::TxLogEntryType;
@@ -56,7 +54,8 @@ pub use self::wallet_info::WalletInfo;
 pub use self::wallet_inst::WalletInst;
 pub use super::seed::{EncryptedWalletSeed, WalletSeed};
 pub use crate::common::{Arc, Mutex, MutexGuard, Result};
-pub use grin_core::core::hash::Hash;
-pub use grin_core::core::{Output, Transaction, TxKernel};
-pub use grin_keychain::{ChildNumber, ExtKeychain, Identifier, Keychain};
-pub use grin_util::secp::key::{PublicKey, SecretKey};
+pub use epic_core::core::hash::Hash;
+pub use epic_core::core::{Output, Transaction, TxKernel};
+pub use epic_keychain::{ChildNumber, ExtKeychain, Identifier, Keychain};
+pub use epic_util::secp::key::{PublicKey, SecretKey};
+pub use epic_core::core::block_fees::BlockFees;

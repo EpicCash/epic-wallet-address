@@ -14,16 +14,16 @@
 
 use super::selection;
 use super::updater;
-use crate::contacts::GrinboxAddress;
+use crate::contacts::EpicboxAddress;
 use crate::wallet::types::{
 	Context, InitTxArgs, NodeClient, Slate, TxLogEntryType, TxProof, WalletBackend,
 };
 use crate::wallet::ErrorKind;
 use failure::Error;
-use grin_keychain::{Identifier, Keychain};
-use grin_util::secp::key::PublicKey;
-use grin_util::secp::pedersen::Commitment;
-use grin_util::static_secp_instance;
+use epic_keychain::{Identifier, Keychain};
+use epic_util::secp::key::PublicKey;
+use epic_util::secp::pedersen::Commitment;
+use epic_util::static_secp_instance;
 use std::collections::HashSet;
 use uuid::Uuid;
 
@@ -549,8 +549,8 @@ pub fn verify_tx_proof(
 	tx_proof: &TxProof,
 ) -> Result<
 	(
-		GrinboxAddress,  // sender address
-		GrinboxAddress,  // receiver address
+		EpicboxAddress,  // sender address
+		EpicboxAddress,  // receiver address
 		u64,             // amount
 		Vec<Commitment>, // receiver output
 		Commitment,      // kernel excess

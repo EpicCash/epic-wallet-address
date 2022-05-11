@@ -20,11 +20,11 @@ use crate::wallet::types::{
 };
 use crate::wallet::ErrorKind;
 use failure::Error;
-use grin_core::core::amount_to_hr_string;
-use grin_core::libtx::build;
-use grin_core::libtx::proof::{ProofBuild, ProofBuilder};
-use grin_core::libtx::tx_fee;
-use grin_keychain::{Identifier, Keychain};
+use epic_core::core::amount_to_hr_string;
+use epic_core::libtx::build;
+use epic_core::libtx::proof::{ProofBuild, ProofBuilder};
+use epic_core::libtx::tx_fee;
+use epic_keychain::{Identifier, Keychain};
 use log::debug;
 use std::collections::HashMap;
 
@@ -121,7 +121,7 @@ where
 		let mut t = TxLogEntry::new(parent_key_id.clone(), TxLogEntryType::TxSent, log_id);
 		t.tx_slate_id = Some(slate_id.clone());
 		t.address = address;
-		let filename = format!("{}.grintx", slate_id);
+		let filename = format!("{}.epictx", slate_id);
 		t.stored_tx = Some(filename);
 		t.fee = Some(slate.fee);
 		let mut amount_debited = 0;

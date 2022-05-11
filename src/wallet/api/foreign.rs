@@ -22,7 +22,7 @@ use crate::wallet::Container;
 use colored::Colorize;
 use failure::Error;
 use gotham_derive::StateData;
-use grin_core::core::amount_to_hr_string;
+use epic_core::core::amount_to_hr_string;
 use std::marker::PhantomData;
 
 const FOREIGN_API_VERSION: u16 = 2;
@@ -167,7 +167,7 @@ where
 			};
 
 			cli_message!(
-				"Slate {} for {} grin received{}",
+				"Slate {} for {} epic received{}",
 				slate.id.to_string().bright_green(),
 				amount_to_hr_string(slate.amount, false).bright_green(),
 				from

@@ -16,24 +16,24 @@
 //! around during an interactive wallet exchange
 
 use super::versions::v2::*;
-use super::versions::{CompatKernelFeatures, CURRENT_SLATE_VERSION, GRIN_BLOCK_HEADER_VERSION};
+use super::versions::{CompatKernelFeatures, CURRENT_SLATE_VERSION, EPIC_BLOCK_HEADER_VERSION};
 use crate::wallet::ErrorKind;
 use blake2_rfc::blake2b::blake2b;
 use failure::Error;
-use grin_core::core::amount_to_hr_string;
-use grin_core::core::committed::Committed;
-use grin_core::core::transaction::{
+use epic_core::core::amount_to_hr_string;
+use epic_core::core::committed::Committed;
+use epic_core::core::transaction::{
 	Input, KernelFeatures, Output, Transaction, TransactionBody, TxKernel, Weighting,
 };
-use grin_core::core::verifier_cache::LruVerifierCache;
-use grin_core::libtx::proof::ProofBuild;
-use grin_core::libtx::{aggsig, build, secp_ser, tx_fee};
-use grin_core::map_vec;
-use grin_keychain::{BlindSum, BlindingFactor, Keychain};
-use grin_util::secp::key::{PublicKey, SecretKey};
-use grin_util::secp::pedersen::Commitment;
-use grin_util::secp::{self, Signature};
-use grin_util::RwLock;
+
+use epic_core::libtx::proof::ProofBuild;
+use epic_core::libtx::{aggsig, build, secp_ser, tx_fee};
+use epic_core::map_vec;
+use epic_keychain::{BlindSum, BlindingFactor, Keychain};
+use epic_util::secp::key::{PublicKey, SecretKey};
+use epic_util::secp::pedersen::Commitment;
+use epic_util::secp::{self, Signature};
+use epic_util::RwLock;
 use log::{debug, error, info};
 use rand::thread_rng;
 use serde::{Deserialize, Serialize, Serializer};
@@ -148,7 +148,7 @@ pub struct VersionCompatInfo {
 	pub version: u16,
 	/// Original version this slate was converted from
 	pub orig_version: u16,
-	/// The grin block header version this slate is intended for
+	/// The epic block header version this slate is intended for
 	pub block_header_version: u16,
 }
 
@@ -174,7 +174,7 @@ impl Slate {
 			version_info: VersionCompatInfo {
 				version: CURRENT_SLATE_VERSION,
 				orig_version: CURRENT_SLATE_VERSION,
-				block_header_version: GRIN_BLOCK_HEADER_VERSION,
+				block_header_version: EPIC_BLOCK_HEADER_VERSION,
 			},
 		}
 	}
@@ -586,8 +586,7 @@ impl Slate {
 
 		// confirm the overall transaction is valid (including the updated kernel)
 		// accounting for tx weight limits
-		let verifier_cache = Arc::new(RwLock::new(LruVerifierCache::new()));
-		let _ = final_tx.validate(Weighting::AsTransaction, verifier_cache)?;
+		let _ = final_tx.validate(Weighting::AsTransaction)?;
 
 		self.tx = final_tx;
 		Ok(())

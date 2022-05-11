@@ -14,9 +14,9 @@
 
 use super::is_cli;
 use super::Result;
-use crate::contacts::DEFAULT_GRINBOX_PORT;
-use grin_core::global::ChainTypes;
-use grin_util::logger::LoggingConfig;
+use crate::contacts::DEFAULT_EPICBOX_PORT;
+use epic_core::global::ChainTypes;
+use epic_util::logger::LoggingConfig;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fs::File;
@@ -25,24 +25,28 @@ use std::path::{Path, PathBuf};
 
 const WALLET713_HOME: &str = ".wallet713";
 const WALLET713_DEFAULT_CONFIG_FILENAME: &str = "wallet713.toml";
+const WALLET713_DEFAULT_LOG_CONFIG_FILENAME: &str = "wallet713_log.toml";
+const WALLET713_DEFAULT_LOG_FILENAME: &str = "wallet713.log";
 
 const DEFAULT_CONFIG: &str = r#"
 	wallet713_data_path = "wallet713_data"
-	grinbox_domain = "grinbox.io"
+	epicbox_domain = "epicbox.io"
 	default_keybase_ttl = "24h"
+	owner_api = true
+	foreign_api = true
 "#;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Wallet713Config {
 	pub chain: Option<ChainTypes>,
 	pub wallet713_data_path: String,
-	pub grinbox_domain: String,
-	pub grinbox_port: Option<u16>,
-	pub grinbox_protocol_unsecure: Option<bool>,
-	pub grinbox_address_index: Option<u32>,
-	pub grin_node_uri: Option<String>,
-	pub grin_node_secret: Option<String>,
-	pub grinbox_listener_auto_start: Option<bool>,
+	pub epicbox_domain: String,
+	pub epicbox_port: Option<u16>,
+	pub epicbox_protocol_unsecure: Option<bool>,
+	pub epicbox_address_index: Option<u32>,
+	pub epic_node_uri: Option<String>,
+	pub epic_node_secret: Option<String>,
+	pub epicbox_listener_auto_start: Option<bool>,
 	pub keybase_listener_auto_start: Option<bool>,
 	pub max_auto_accept_invoice: Option<u64>,
 	pub default_keybase_ttl: Option<String>,
@@ -129,16 +133,16 @@ impl Wallet713Config {
 		let mut wallet_config = WalletConfig::default();
 		wallet_config.chain_type = self.chain.clone();
 		wallet_config.data_file_dir = data_path.to_string();
-		wallet_config.check_node_api_http_addr = self.grin_node_uri().clone();
+		wallet_config.check_node_api_http_addr = self.epic_node_uri().clone();
 		Ok(wallet_config)
 	}
 
-	pub fn grinbox_protocol_unsecure(&self) -> bool {
-		self.grinbox_protocol_unsecure.unwrap_or(cfg!(windows))
+	pub fn epicbox_protocol_unsecure(&self) -> bool {
+		self.epicbox_protocol_unsecure.unwrap_or(cfg!(windows))
 	}
 
-	pub fn grinbox_address_index(&self) -> u32 {
-		self.grinbox_address_index.unwrap_or(0)
+	pub fn epicbox_address_index(&self) -> u32 {
+		self.epicbox_address_index.unwrap_or(0)
 	}
 
 	pub fn get_data_path(&self) -> Result<PathBuf> {
@@ -159,18 +163,18 @@ impl Wallet713Config {
 		Ok(data_path)
 	}
 
-	pub fn grin_node_uri(&self) -> String {
+	pub fn epic_node_uri(&self) -> String {
 		let chain_type = self.chain.as_ref().unwrap_or(&ChainTypes::Floonet);
-		self.grin_node_uri.clone().unwrap_or(match chain_type {
+		self.epic_node_uri.clone().unwrap_or(match chain_type {
 			ChainTypes::Mainnet => String::from("https://node.713.mw"),
 			_ => String::from("https://floonet.node.713.mw"),
 		})
 	}
 
-	pub fn grin_node_secret(&self) -> Option<String> {
+	pub fn epic_node_secret(&self) -> Option<String> {
 		let chain_type = self.chain.as_ref().unwrap_or(&ChainTypes::Mainnet);
-		match self.grin_node_uri {
-			Some(_) => self.grin_node_secret.clone(),
+		match self.epic_node_uri {
+			Some(_) => self.epic_node_secret.clone(),
 			None => match chain_type {
 				ChainTypes::Mainnet => Some(String::from("thanksvault713kizQ4ZVv")),
 				_ => Some(String::from("thanksvault713EcRXKbYS")),
@@ -178,8 +182,8 @@ impl Wallet713Config {
 		}
 	}
 
-	pub fn grinbox_listener_auto_start(&self) -> bool {
-		self.grinbox_listener_auto_start.unwrap_or(is_cli())
+	pub fn epicbox_listener_auto_start(&self) -> bool {
+		self.epicbox_listener_auto_start.unwrap_or(is_cli())
 	}
 
 	pub fn keybase_listener_auto_start(&self) -> bool {
@@ -223,11 +227,11 @@ impl Wallet713Config {
 
 impl fmt::Display for Wallet713Config {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "wallet713_data_path={}\ngrinbox_domain={}\ngrinbox_port={}\ngrin_node_uri={}\ngrin_node_secret={}",
+		write!(f, "wallet713_data_path={}\nepicbox_domain={}\nepicbox_port={}\nepic_node_uri={}\nepic_node_secret={}",
                self.wallet713_data_path,
-               self.grinbox_domain,
-               self.grinbox_port.unwrap_or(DEFAULT_GRINBOX_PORT),
-               self.grin_node_uri.clone().unwrap_or(String::from("provided by vault713")),
+               self.epicbox_domain,
+               self.epicbox_port.unwrap_or(DEFAULT_EPICBOX_PORT),
+               self.epic_node_uri.clone().unwrap_or(String::from("provided by vault713")),
                "{...}")?;
 		Ok(())
 	}
@@ -247,7 +251,7 @@ pub struct WalletConfig {
 	pub owner_api_listen_port: Option<u16>,
 	/// Location of the secret for basic auth on the Owner API
 	pub api_secret_path: Option<String>,
-	/// Location of the node api secret for basic auth on the Grin API
+	/// Location of the node api secret for basic auth on the Epic API
 	pub node_api_secret_path: Option<String>,
 	/// The api address of a running server node against which transaction inputs
 	/// will be checked during send
@@ -308,4 +312,55 @@ pub struct GlobalWalletConfigMembers {
 	pub wallet: WalletConfig,
 	/// Logging config
 	pub logging: Option<LoggingConfig>,
+}
+
+/// Load a [`LoggingConfig`] from `path` if it is [`Some`], otherwise create a default one.
+// TODO: Ideally the logging configuration should be part of Wallet713Config
+pub fn load_log_file(
+	path: Option<&str>,
+	wallet713_config: &Wallet713Config,
+) -> Result<LoggingConfig> {
+	let default_home = Wallet713Config::default_home_path(&wallet713_config.chain)?;
+	let default_config_file = {
+		let mut default_home = default_home.clone();
+		default_home.push(WALLET713_DEFAULT_LOG_CONFIG_FILENAME);
+		default_home
+	};
+	let default_log_file = {
+		let mut default_home = default_home;
+		default_home.push(WALLET713_DEFAULT_LOG_FILENAME);
+		default_home
+	};
+
+	// If the path to the config is passed, try to use it. Otherwise, try the default path
+	if let Some(path) = path {
+		let mut file = File::open(path)?;
+		let mut toml_str = String::new();
+		file.read_to_string(&mut toml_str)?;
+
+		let config = toml::from_str(&toml_str[..])?;
+
+		Ok(config)
+	} else if default_config_file.exists() {
+		let mut file = File::open(&default_config_file)?;
+		let mut toml_str = String::new();
+		file.read_to_string(&mut toml_str)?;
+
+		let config = toml::from_str(&toml_str[..])?;
+
+		Ok(config)
+	} else {
+		let config = LoggingConfig {
+			log_file_path: default_log_file.to_string_lossy().to_string(),
+			log_to_stdout: false,
+			..Default::default()
+		};
+
+		// save this configuration to the default config file
+		let toml_str = toml::to_string(&config)?;
+		let mut f = File::create(&default_config_file)?;
+		f.write_all(toml_str.as_bytes())?;
+
+		Ok(config)
+	}
 }
