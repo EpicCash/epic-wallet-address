@@ -3635,6 +3635,7 @@ dependencies = [
  "dirs 1.0.5",
  "dont_disappear",
  "easy-jsonrpc-mw",
+ "ed25519-dalek",
  "env_logger 0.6.2",
  "epic_api",
  "epic_core",

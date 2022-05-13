@@ -121,7 +121,7 @@ impl Subscriber for KeybaseSubscriber {
 						username: sender.to_string(),
 						topic: Some(reply_topic),
 					};
-					handler.on_slate(address.borrow(), &slate, None);
+					handler.on_slate(address.borrow(), slate, None);
 				}
 			} else {
 				if !dropped {

@@ -54,8 +54,6 @@ impl EpicboxPublisher {
 
 impl Publisher for EpicboxPublisher {
 	fn post_slate(&self, slate: &VersionedSlate, to: &dyn Address) -> Result<()> {
-
-
 		let to = EpicboxAddress::from_str(&to.to_string())?;
 		self.broker
 			.post_slate(slate, &to, &self.address, &self.secret_key)?;
@@ -158,7 +156,10 @@ impl EpicboxBroker {
 			signature,
 		};
 
-		cli_message!("####################### post slate ###################### {}", serde_json::to_string(&request).unwrap());
+		cli_message!(
+			"####################### post slate ###################### {}",
+			serde_json::to_string(&request).unwrap()
+		);
 
 		if let Some(ref sender) = *self.inner.lock() {
 			sender
@@ -297,14 +298,7 @@ where
 	}
 
 	fn send(&self, request: &ProtocolRequest) -> Result<()> {
-
-
-
 		let request = serde_json::to_string(&request).unwrap();
-
-
-
-
 
 		self.sender.send(request)?;
 		Ok(())
@@ -357,9 +351,6 @@ where
 			}
 		};
 
-
-
-
 		match response {
 			ProtocolResponse::Challenge { str } => {
 				self.challenge = Some(str.clone());
@@ -391,7 +382,7 @@ where
 				let address = tx_proof.address.clone();
 				self.handler
 					.lock()
-					.on_slate(&address, &slate, Some(&mut tx_proof));
+					.on_slate(&address, slate, Some(&mut tx_proof));
 			}
 			ProtocolResponse::Error {
 				kind: _,

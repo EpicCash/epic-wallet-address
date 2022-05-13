@@ -41,7 +41,6 @@ use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use uuid::Uuid;
 
-use crate::common::base58::FromBase58;
 
 #[derive(StateData)]
 pub struct Owner<W, C, K>

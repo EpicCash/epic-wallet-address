@@ -43,7 +43,7 @@ pub trait Subscriber {
 
 pub trait SubscriptionHandler: Send {
 	fn on_open(&self);
-	fn on_slate(&self, from: &dyn Address, slate: &VersionedSlate, proof: Option<&mut TxProof>);
+	fn on_slate(&self, from: &dyn Address, slate: VersionedSlate, proof: Option<&mut TxProof>);
 	fn on_close(&self, result: CloseReason);
 	fn on_dropped(&self);
 	fn on_reestablished(&self);
@@ -113,10 +113,10 @@ where
 		//        cli_message!("Listener for {} started", self.name.bright_green());
 	}
 
-	fn on_slate(&self, from: &dyn Address, slate: &VersionedSlate, tx_proof: Option<&mut TxProof>) {
+	fn on_slate(&self, from: &dyn Address, slate: VersionedSlate, tx_proof: Option<&mut TxProof>) {
 		let version = slate.version();
-		let mut slate: Slate = slate.clone().into();
-
+		//let mut slate: Slate = slate.clone().into();
+		let mut on_slate = Slate::from(slate);
 		/*if slate.num_participants > slate.participant_data.len() {
 			cli_message!(
 				"Slate [{}] received from [{}] for [{}] epics",
@@ -138,11 +138,11 @@ where
 		}
 
 		let result = self
-			.process_incoming_slate(Some(from.to_string()), &mut slate, tx_proof)
+			.process_incoming_slate(Some(from.to_string()), &mut on_slate, tx_proof)
 			.and_then(|is_finalized| {
 				if !is_finalized {
-					let id = slate.id.clone();
-					let slate = VersionedSlate::into_version(slate, version);
+					let id = on_slate.id.clone();
+					let slate = VersionedSlate::into_version(on_slate, version);
 
 					self.publisher
 						.post_slate(&slate, from)
@@ -178,7 +178,11 @@ where
 				//println!("Listener for {} stopped", self.name.bright_green())
 			}
 			CloseReason::Abnormal(error) => {
-				cli_message!("Listener {} stopped unexpectedly {:?}", self.name.bright_green(), error)
+				cli_message!(
+					"Listener {} stopped unexpectedly {:?}",
+					self.name.bright_green(),
+					error
+				)
 			}
 		}
 	}
