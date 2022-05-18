@@ -17,7 +17,6 @@ use crate::wallet::types::{
 	BlockFees, CbData, NodeClient, OutputCommitMapping, OutputData, OutputStatus, TxLogEntry,
 	TxLogEntryType, WalletBackend, WalletInfo,
 };
-use failure::Error;
 use epic_core::consensus::reward;
 use epic_core::core::{Output, TxKernel};
 use epic_core::global::coinbase_maturity;
@@ -26,6 +25,7 @@ use epic_core::libtx::reward;
 use epic_keychain::{Identifier, Keychain, SwitchCommitmentType};
 use epic_util::from_hex;
 use epic_util::secp::pedersen::Commitment;
+use failure::Error;
 use log::{debug, warn};
 use std::collections::HashMap;
 use uuid::Uuid;

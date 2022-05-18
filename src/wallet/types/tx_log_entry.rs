@@ -14,11 +14,16 @@
 
 use super::{Identifier, TxLogEntryType};
 use chrono::prelude::*;
+use epic_core::libtx::secp_ser;
 use epic_core::ser;
+
+use super::slate::versions::ser as dalek_ser;
+use super::slate::ParticipantMessages;
+use ed25519_dalek::PublicKey as DalekPublicKey;
+use ed25519_dalek::Signature as DalekSignature;
 use epic_util::secp::pedersen::Commitment;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
 /// Optional transaction information, recorded when an event happens
 /// to add or remove funds from a wallet. One Transaction log entry
 /// maps to one or many outputs
@@ -50,15 +55,33 @@ pub struct TxLogEntry {
 	/// number of outputs involved in TX
 	pub num_outputs: usize,
 	/// Amount credited via this transaction
+	#[serde(with = "secp_ser::string_or_u64")]
 	pub amount_credited: u64,
 	/// Amount debited via this transaction
+	#[serde(with = "secp_ser::string_or_u64")]
 	pub amount_debited: u64,
 	/// Fee
+	#[serde(with = "secp_ser::opt_string_or_u64")]
 	pub fee: Option<u64>,
-	/// Public kernel excess
-	pub excess: Option<Commitment>,
+	/// Cutoff block height
+	#[serde(with = "secp_ser::opt_string_or_u64")]
+	#[serde(default)]
+	pub ttl_cutoff_height: Option<u64>,
+	/// Message data, stored as json
+	pub messages: Option<ParticipantMessages>,
 	/// Location of the store transaction, (reference or resending)
 	pub stored_tx: Option<String>,
+	/// Associated kernel excess, for later lookup if necessary
+	#[serde(with = "secp_ser::option_commitment_serde")]
+	#[serde(default)]
+	pub kernel_excess: Option<Commitment>,
+	/// Height reported when transaction was created, if lookup
+	/// of kernel is necessary
+	#[serde(default)]
+	pub kernel_lookup_min_height: Option<u64>,
+	/// Additional info needed to stored payment proof
+	#[serde(default)]
+	pub payment_proof: Option<StoredProofInfo>,
 }
 
 impl TxLogEntry {
@@ -78,8 +101,12 @@ impl TxLogEntry {
 			num_inputs: 0,
 			num_outputs: 0,
 			fee: None,
-			excess: None,
+			ttl_cutoff_height: None,
+			messages: None,
 			stored_tx: None,
+			kernel_excess: None,
+			kernel_lookup_min_height: None,
+			payment_proof: None,
 		}
 	}
 
@@ -97,6 +124,39 @@ impl ser::Writeable for TxLogEntry {
 
 impl ser::Readable for TxLogEntry {
 	fn read(reader: &mut dyn ser::Reader) -> Result<TxLogEntry, ser::Error> {
+		let data = reader.read_bytes_len_prefix()?;
+		serde_json::from_slice(&data[..]).map_err(|_| ser::Error::CorruptedData)
+	}
+}
+
+/// Payment proof information. Differs from what is sent via
+/// the slate
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct StoredProofInfo {
+	/// receiver address
+	#[serde(with = "dalek_ser::dalek_pubkey_serde")]
+	pub receiver_address: DalekPublicKey,
+	#[serde(with = "dalek_ser::option_dalek_sig_serde")]
+	/// receiver signature
+	pub receiver_signature: Option<DalekSignature>,
+	/// sender address derivation path index
+	pub sender_address_path: u32,
+	/// sender address
+	#[serde(with = "dalek_ser::dalek_pubkey_serde")]
+	pub sender_address: DalekPublicKey,
+	/// sender signature
+	#[serde(with = "dalek_ser::option_dalek_sig_serde")]
+	pub sender_signature: Option<DalekSignature>,
+}
+
+impl ser::Writeable for StoredProofInfo {
+	fn write<W: ser::Writer>(&self, writer: &mut W) -> Result<(), ser::Error> {
+		writer.write_bytes(&serde_json::to_vec(self).map_err(|_| ser::Error::CorruptedData)?)
+	}
+}
+
+impl ser::Readable for StoredProofInfo {
+	fn read(reader: &mut dyn ser::Reader) -> Result<StoredProofInfo, ser::Error> {
 		let data = reader.read_bytes_len_prefix()?;
 		serde_json::from_slice(&data[..]).map_err(|_| ser::Error::CorruptedData)
 	}

@@ -41,7 +41,8 @@ pub use self::output_commit_mapping::OutputCommitMapping;
 pub use self::output_data::OutputData;
 pub use self::output_status::OutputStatus;
 pub use self::slate::{
-	Slate, SlateVersion, VersionedSlate, CURRENT_SLATE_VERSION, EPIC_BLOCK_HEADER_VERSION,
+	ParticipantMessages, Slate, SlateVersion, VersionedSlate, CURRENT_SLATE_VERSION,
+	EPIC_BLOCK_HEADER_VERSION,
 };
 pub use self::tx_log_entry::TxLogEntry;
 pub use self::tx_log_entry_type::TxLogEntryType;
@@ -54,8 +55,8 @@ pub use self::wallet_info::WalletInfo;
 pub use self::wallet_inst::WalletInst;
 pub use super::seed::{EncryptedWalletSeed, WalletSeed};
 pub use crate::common::{Arc, Mutex, MutexGuard, Result};
+pub use epic_core::core::block_fees::BlockFees;
 pub use epic_core::core::hash::Hash;
 pub use epic_core::core::{Output, Transaction, TxKernel};
 pub use epic_keychain::{ChildNumber, ExtKeychain, Identifier, Keychain};
 pub use epic_util::secp::key::{PublicKey, SecretKey};
-pub use epic_core::core::block_fees::BlockFees;

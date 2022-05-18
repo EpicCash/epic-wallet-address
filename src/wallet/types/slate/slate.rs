@@ -107,7 +107,7 @@ pub struct ParticipantMessageData {
 	pub message_sig: Option<Signature>,
 }
 
-/*impl ParticipantMessageData {
+impl ParticipantMessageData {
 	/// extract relevant message data from participant data
 	pub fn from_participant_data(p: &ParticipantData) -> ParticipantMessageData {
 		ParticipantMessageData {
@@ -117,7 +117,7 @@ pub struct ParticipantMessageData {
 			message_sig: p.message_sig.clone(),
 		}
 	}
-}*/
+}
 
 /// A 'Slate' is passed around to all parties to build up all of the public
 /// transaction data needed to create a finalized transaction. Callers can pass
@@ -294,7 +294,12 @@ impl Slate {
 			Some(&self.pub_blind_sum(keychain.secp())?),
 			&self.msg_to_sign()?,
 		)?;
-		self.participant_data[participant_id].part_sig = Some(sig_part);
+		for i in 0..self.num_participants {
+			if self.participant_data[i].id == participant_id as u64 {
+				self.participant_data[i].part_sig = Some(sig_part);
+				break;
+			}
+		}
 		Ok(())
 	}
 
@@ -509,25 +514,6 @@ impl Slate {
 		Ok(())
 	}
 
-	/// Calculate the total public excess
-	pub fn sum_excess<K>(&self, keychain: &K) -> Result<Commitment, Error>
-	where
-		K: Keychain,
-	{
-		// sum the input/output commitments on the final tx
-		let overage = self.tx.fee() as i64;
-		let tx_excess = self.tx.sum_commitments(overage)?;
-
-		// subtract the kernel_excess (built from kernel_offset)
-		let offset_excess = keychain
-			.secp()
-			.commit(0, self.tx.offset.secret_key(keychain.secp())?)?;
-		let excess = keychain
-			.secp()
-			.commit_sum(vec![tx_excess], vec![offset_excess])?;
-		Ok(excess)
-	}
-
 	/// This should be callable by either the sender or receiver
 	/// once phase 3 is done
 	///
@@ -570,7 +556,24 @@ impl Slate {
 
 		Ok(final_sig)
 	}
+	/// return the final excess
+	pub fn calc_excess<K>(&self, keychain: &K) -> Result<Commitment, Error>
+	where
+		K: Keychain,
+	{
+		let kernel_offset = &self.tx.offset;
+		let tx = self.tx.clone();
+		let overage = tx.fee() as i64;
+		let tx_excess = tx.sum_commitments(overage)?;
 
+		// subtract the kernel_excess (built from kernel_offset)
+		let offset_excess = keychain
+			.secp()
+			.commit(0, kernel_offset.secret_key(&keychain.secp())?)?;
+		Ok(keychain
+			.secp()
+			.commit_sum(vec![tx_excess], vec![offset_excess])?)
+	}
 	/// builds a final transaction after the aggregated sig exchange
 	fn finalize_transaction<K>(
 		&mut self,
@@ -580,26 +583,13 @@ impl Slate {
 	where
 		K: Keychain,
 	{
-		let kernel_offset = self.tx.offset.clone();
-
 		self.check_fees()?;
+		// build the final excess based on final tx and offset
+		let final_excess = self.calc_excess(keychain)?;
+
+		debug!("Final Tx excess: {:?}", final_excess);
 
 		let mut final_tx = self.tx.clone();
-
-		// build the final excess based on final tx and offset
-		let final_excess = {
-			// sum the input/output commitments on the final tx
-			let overage = final_tx.fee() as i64;
-			let tx_excess = final_tx.sum_commitments(overage)?;
-
-			// subtract the kernel_excess (built from kernel_offset)
-			let offset_excess = keychain
-				.secp()
-				.commit(0, kernel_offset.secret_key(&keychain.secp())?)?;
-			keychain
-				.secp()
-				.commit_sum(vec![tx_excess], vec![offset_excess])?
-		};
 
 		// update the tx kernel to reflect the offset excess and sig
 		assert_eq!(final_tx.kernels().len(), 1);

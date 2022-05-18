@@ -96,7 +96,11 @@ where
 			}
 			Ok(false)
 		} else {
-			self.owner.finalize_tx(slate, tx_proof)?;
+			
+
+			let slate = self.owner.finalize_tx(&slate, tx_proof)?;
+			self.owner.post_tx(&slate.tx, false)?;
+
 			Ok(true)
 		}
 	}
@@ -156,13 +160,13 @@ where
 						id.to_string().bright_green(),
 						from.stripped().bright_green()
 					);
-				}
-				/*else {
-					cli_message!(
-						"Slate [{}] finalized successfully",
-						slate.id.to_string().bright_green()
-					);
-				}*/
+				} /* else {
+	  let id = on_slate.id.clone();
+	  cli_message!(
+		  "Slate [{}] finalized successfully",
+		  id.to_string().bright_green()
+	  );
+  }*/
 				Ok(())
 			});
 

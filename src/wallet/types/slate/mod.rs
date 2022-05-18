@@ -15,6 +15,7 @@
 pub mod slate;
 pub mod versions;
 
+pub use self::slate::ParticipantMessages;
 pub use self::slate::Slate;
 pub use self::versions::{
 	SlateVersion, VersionedSlate, CURRENT_SLATE_VERSION, EPIC_BLOCK_HEADER_VERSION,

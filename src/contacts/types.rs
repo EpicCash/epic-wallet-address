@@ -25,7 +25,7 @@ use url::Url;
 const ADDRESS_REGEX: &str = r"^((?P<address_type>keybase|epicbox|http|https)://).+$";
 const EPICBOX_ADDRESS_REGEX: &str = r"^(epicbox://)?(?P<public_key>[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{52})(@(?P<domain>[a-zA-Z0-9\.]+)(:(?P<port>[0-9]*))?)?$";
 const KEYBASE_ADDRESS_REGEX: &str = r"^(keybase://)?(?P<username>[0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]{1,16})(:(?P<topic>[a-zA-Z0-9_-]+))?$";
-const DEFAULT_EPICBOX_DOMAIN: &str = "epicbox.io";
+const DEFAULT_EPICBOX_DOMAIN: &str = "209.127.179.199";
 #[cfg(not(windows))]
 pub const DEFAULT_EPICBOX_PORT: u16 = 443;
 #[cfg(windows)]
@@ -47,7 +47,6 @@ pub trait Address: Debug + Display {
 }
 
 pub fn parse_address(address: &str) -> Result<Box<dyn Address>> {
-
 	let re = Regex::new(ADDRESS_REGEX)?;
 	let captures = re.captures(address);
 	if captures.is_none() {

@@ -156,11 +156,6 @@ impl EpicboxBroker {
 			signature,
 		};
 
-		cli_message!(
-			"####################### post slate ###################### {}",
-			serde_json::to_string(&request).unwrap()
-		);
-
 		if let Some(ref sender) = *self.inner.lock() {
 			sender
 				.send(serde_json::to_string(&request).unwrap())

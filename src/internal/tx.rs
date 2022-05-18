@@ -19,11 +19,11 @@ use crate::wallet::types::{
 	Context, InitTxArgs, NodeClient, Slate, TxLogEntryType, TxProof, WalletBackend,
 };
 use crate::wallet::ErrorKind;
-use failure::Error;
 use epic_keychain::{Identifier, Keychain};
 use epic_util::secp::key::PublicKey;
 use epic_util::secp::pedersen::Commitment;
 use epic_util::static_secp_instance;
+use failure::Error;
 use std::collections::HashSet;
 use uuid::Uuid;
 
@@ -274,7 +274,6 @@ where
 			&context.sec_nonce,
 			participant_id,
 		)?;
-		update_stored_excess(wallet, slate, false)?;
 	}
 
 	Ok(context)
@@ -374,10 +373,13 @@ where
 			break;
 		}
 	}
-	let tx = match tx {
+	let mut tx = match tx {
 		Some(t) => t,
 		None => return Err(ErrorKind::TransactionDoesntExist(slate.id.to_string()))?,
 	};
+
+	tx.kernel_excess = Some(slate.tx.body.kernels[0].excess);
+
 	{
 		let mut batch = wallet.batch()?;
 		let id = tx.tx_slate_id.unwrap().to_string();
@@ -387,48 +389,6 @@ where
 		}
 		batch.commit()?;
 	}
-	Ok(())
-}
-
-pub fn update_stored_excess<T: ?Sized, C, K>(
-	wallet: &mut T,
-	slate: &Slate,
-	is_sender: bool,
-) -> Result<(), Error>
-where
-	T: WalletBackend<C, K>,
-	C: NodeClient,
-	K: Keychain,
-{
-	let (tx_vec, _) = updater::retrieve_txs(wallet, None, Some(slate.id), None, false, false)?;
-	let mut tx = None;
-	// don't want to assume this is the right tx, in case of self-sending
-	for t in tx_vec {
-		if t.tx_type == TxLogEntryType::TxSent && is_sender {
-			tx = Some(t.clone());
-			break;
-		}
-		if t.tx_type == TxLogEntryType::TxReceived && !is_sender {
-			tx = Some(t.clone());
-			break;
-		}
-	}
-	let mut tx = match tx {
-		Some(t) => t,
-		None => return Err(ErrorKind::TransactionDoesntExist(slate.id.to_string()))?,
-	};
-
-	if tx.excess.is_some() {
-		return Ok(());
-	}
-
-	tx.excess = Some(slate.sum_excess(wallet.keychain())?);
-	{
-		let mut batch = wallet.batch()?;
-		batch.save_tx_log_entry(&tx)?;
-		batch.commit()?;
-	}
-
 	Ok(())
 }
 
@@ -475,7 +435,6 @@ where
 	});
 
 	complete_tx(wallet, &mut s, 0, &context)?;
-	update_stored_excess(wallet, &s, true)?;
 	update_stored_tx(wallet, &mut s, tx_proof, false)?;
 	{
 		let mut batch = wallet.batch()?;
@@ -541,6 +500,7 @@ where
 		message,
 		false,
 	)?;
+
 	Ok(ret_slate)
 }
 
